@@ -1,0 +1,940 @@
+Build a complete, production-ready full-stack web application for "Angaayam Foods" — a premium healthy millet-based snacks and natural organic food brand. Follow every instruction precisely and build everything end-to-end.
+
+═══════════════════════════════════════════════
+SECTION 1: PROJECT OVERVIEW
+═══════════════════════════════════════════════
+
+Brand: Angaayam Foods
+Tagline: "Pure. Wholesome. Extraordinary."
+Mission: Healthy millet-based snacks and natural organic foods for human wellness and nutritious snacks for kids.
+Target Audience: Health-conscious individuals, health-centered moms buying for kids, wellness enthusiasts, organic food seekers.
+Tone: Professional, Energetic, Luxury
+Theme: Deep Forest Green + Pure White + Gold Accents
+
+═══════════════════════════════════════════════
+SECTION 2: TECH STACK (MANDATORY — USE EXACTLY THIS)
+═══════════════════════════════════════════════
+
+FRONTEND:
+- React 18 + TypeScript
+- Vite (build tool)
+- Tailwind CSS (styling)
+- React Router v6 (routing)
+- Framer Motion (animations)
+- React Hook Form + Zod (form validation)
+- Axios (HTTP client)
+- React Query / TanStack Query (data fetching & caching)
+- Lucide React (icons)
+- React Hot Toast (notifications)
+- Swiper.js (carousels/sliders)
+
+BACKEND:
+- Node.js + Express.js + TypeScript
+- PostgreSQL (database)
+- Drizzle ORM (database ORM)
+- Razorpay (payments)
+- Nodemailer (email with Gmail SMTP)
+- Bcrypt (password hashing)
+- JSON Web Tokens — JWT (auth)
+- Multer (file uploads)
+- Express Rate Limit (rate limiting)
+- Helmet (security headers)
+- CORS
+- Dotenv
+
+PROJECT STRUCTURE:
+/
+├── client/                  ← React frontend (Vite)
+│   ├── src/
+│   │   ├── components/      ← Reusable UI components
+│   │   │   ├── layout/      ← Navbar, Footer, Sidebar
+│   │   │   ├── ui/          ← Button, Card, Badge, Modal, Input, etc.
+│   │   │   └── sections/    ← Page sections (Hero, Features, etc.)
+│   │   ├── pages/           ← One file per page/route
+│   │   ├── hooks/           ← Custom React hooks
+│   │   ├── store/           ← Cart, auth context/state
+│   │   ├── types/           ← TypeScript interfaces
+│   │   ├── lib/             ← axios instance, query client, utils
+│   │   └── assets/          ← Static images, SVGs
+│   ├── index.html
+│   ├── vite.config.ts
+│   └── tailwind.config.ts
+│
+├── server/                  ← Express backend
+│   ├── src/
+│   │   ├── routes/          ← Route files per resource
+│   │   ├── controllers/     ← Business logic
+│   │   ├── middleware/       ← Auth, error, upload middleware
+│   │   ├── db/              ← Drizzle schema + migrations
+│   │   └── services/        ← Email, payment, file services
+│   └── index.ts
+│
+├── .env                     ← Environment variables
+├── package.json             ← Root package.json with scripts
+└── README.md
+
+═══════════════════════════════════════════════
+SECTION 3: DATABASE SCHEMA (PostgreSQL + Drizzle ORM)
+═══════════════════════════════════════════════
+
+Create these tables with Drizzle ORM:
+
+TABLE: users
+- id (uuid, primary key)
+- name (varchar 255)
+- email (varchar 255, unique)
+- password (varchar — bcrypt hash)
+- phone (varchar 20)
+- role (enum: 'customer' | 'admin', default 'customer')
+- created_at, updated_at
+
+TABLE: categories
+- id (uuid)
+- name (varchar)
+- slug (varchar, unique)
+- description (text)
+- image_url (varchar)
+- is_active (boolean, default true)
+
+TABLE: products
+- id (uuid)
+- name (varchar)
+- slug (varchar, unique)
+- description (text)
+- short_description (varchar 500)
+- price (decimal 10,2)
+- sale_price (decimal 10,2, nullable)
+- category_id (uuid, FK → categories)
+- images (json array of strings)
+- ingredients (text)
+- nutritional_info (json)
+- weight_options (json array: [{weight: '250g', price: 199}])
+- tags (json array: ['kids-friendly', 'gluten-free', 'millet'])
+- is_featured (boolean)
+- is_active (boolean)
+- stock_quantity (integer)
+- sku (varchar, unique)
+- created_at, updated_at
+
+TABLE: orders
+- id (uuid)
+- order_number (varchar, unique — auto-generated like AF-2024-0001)
+- user_id (uuid, FK → users, nullable for guests)
+- customer_name, customer_email, customer_phone (varchar)
+- items (json — array of {product_id, name, price, quantity, weight})
+- subtotal, discount, shipping_cost, total (decimal)
+- status (enum: 'pending'|'confirmed'|'processing'|'shipped'|'delivered'|'cancelled')
+- payment_status (enum: 'pending'|'paid'|'failed'|'refunded')
+- payment_method (varchar)
+- razorpay_order_id, razorpay_payment_id (varchar nullable)
+- shipping_address (json: {name, line1, line2, city, state, pincode, phone})
+- notes (text, nullable)
+- created_at, updated_at
+
+TABLE: cart_items (for logged-in users)
+- id (uuid)
+- user_id (uuid, FK)
+- product_id (uuid, FK)
+- quantity (integer)
+- weight_option (varchar)
+- created_at
+
+TABLE: bookings
+- id (uuid)
+- booking_number (varchar, unique — like ABK-2024-001)
+- type (enum: 'consultation'|'bulk_order'|'corporate'|'gift_hamper')
+- name, email, phone (varchar)
+- company_name (varchar, nullable)
+- preferred_date (date)
+- preferred_time (varchar)
+- message (text)
+- status (enum: 'pending'|'confirmed'|'completed'|'cancelled')
+- admin_notes (text, nullable)
+- created_at
+
+TABLE: events
+- id (uuid)
+- title (varchar)
+- slug (varchar, unique)
+- description (text)
+- event_type (enum: 'webinar'|'workshop'|'popup'|'expo'|'tasting')
+- event_date (timestamp)
+- end_date (timestamp, nullable)
+- location (varchar)
+- is_online (boolean)
+- meeting_link (varchar, nullable)
+- max_attendees (integer, nullable)
+- price (decimal, default 0 — 0 means free)
+- image_url (varchar)
+- is_active (boolean)
+- created_at
+
+TABLE: event_registrations
+- id (uuid)
+- event_id (uuid, FK)
+- name, email, phone (varchar)
+- attendees (integer, default 1)
+- payment_status (enum: 'free'|'paid'|'pending')
+- razorpay_payment_id (varchar, nullable)
+- created_at
+
+TABLE: blog_posts
+- id (uuid)
+- title (varchar)
+- slug (varchar, unique)
+- excerpt (varchar 500)
+- content (text — HTML or markdown)
+- cover_image (varchar)
+- author_name (varchar)
+- category (varchar: 'nutrition'|'recipes'|'wellness'|'kids-health'|'millets')
+- tags (json array)
+- is_published (boolean)
+- published_at (timestamp, nullable)
+- read_time_minutes (integer)
+- created_at, updated_at
+
+TABLE: resources
+- id (uuid)
+- title (varchar)
+- description (text)
+- type (enum: 'pdf'|'video'|'recipe'|'guide'|'infographic')
+- file_url (varchar)
+- thumbnail_url (varchar)
+- category (varchar)
+- is_free (boolean, default true)
+- download_count (integer, default 0)
+- created_at
+
+TABLE: newsletter_subscribers
+- id (uuid)
+- email (varchar, unique)
+- name (varchar, nullable)
+- is_active (boolean, default true)
+- subscribed_at (timestamp)
+
+TABLE: contact_messages
+- id (uuid)
+- name, email, phone (varchar)
+- subject (varchar)
+- message (text)
+- is_read (boolean, default false)
+- replied_at (timestamp, nullable)
+- created_at
+
+TABLE: testimonials
+- id (uuid)
+- customer_name, location (varchar)
+- rating (integer 1–5)
+- review (text)
+- product_id (uuid, FK, nullable)
+- avatar_url (varchar, nullable)
+- is_approved (boolean, default false)
+- created_at
+
+TABLE: promo_codes
+- id (uuid)
+- code (varchar, unique — uppercase)
+- discount_type (enum: 'percentage'|'flat')
+- discount_value (decimal)
+- min_order_value (decimal, default 0)
+- max_uses (integer, nullable)
+- used_count (integer, default 0)
+- expires_at (timestamp, nullable)
+- is_active (boolean)
+
+═══════════════════════════════════════════════
+SECTION 4: BACKEND API ROUTES
+═══════════════════════════════════════════════
+
+BASE URL: /api/v1
+
+AUTH ROUTES (/api/v1/auth):
+POST /register — register new user, send welcome email
+POST /login — login, return JWT
+POST /logout
+GET /me — get current user (protected)
+POST /forgot-password — send reset email
+POST /reset-password
+
+PRODUCT ROUTES (/api/v1/products):
+GET / — list all active products (with filters: category, tags, price range, search, sort)
+GET /featured — featured products
+GET /:slug — single product detail
+GET /category/:slug — products by category
+POST / — create product (admin only)
+PUT /:id — update product (admin only)
+DELETE /:id — soft delete (admin only)
+
+CATEGORY ROUTES (/api/v1/categories):
+GET / — all active categories
+POST / — create (admin)
+PUT /:id — update (admin)
+
+CART ROUTES (/api/v1/cart) — for logged-in users:
+GET / — get user cart
+POST /add — add item
+PUT /update — update quantity
+DELETE /remove/:id — remove item
+DELETE /clear — clear cart
+
+ORDER ROUTES (/api/v1/orders):
+POST / — create order + Razorpay order
+POST /verify-payment — verify Razorpay signature, update order status, send confirmation email
+GET /my-orders — get logged-in user orders
+GET /:orderNumber — get single order
+GET / — all orders (admin)
+PUT /:id/status — update order status (admin), send email notification
+
+BOOKING ROUTES (/api/v1/bookings):
+POST / — create booking, send confirmation email to customer + notification to admin
+GET / — all bookings (admin)
+PUT /:id/status — update booking status (admin)
+
+EVENT ROUTES (/api/v1/events):
+GET / — list upcoming active events
+GET /:slug — single event
+POST /:id/register — register for event (with optional Razorpay for paid events), send confirmation email
+GET / — all events (admin)
+POST / — create event (admin)
+PUT /:id — update (admin)
+
+BLOG ROUTES (/api/v1/blog):
+GET / — published posts (with pagination, category filter)
+GET /:slug — single post
+POST / — create (admin)
+PUT /:id — update (admin)
+DELETE /:id — soft delete (admin)
+
+RESOURCE ROUTES (/api/v1/resources):
+GET / — all free resources
+POST /:id/download — increment download count + return URL
+POST / — create (admin)
+
+CONTACT ROUTES (/api/v1/contact):
+POST / — submit message, send auto-reply email, notify admin
+
+NEWSLETTER ROUTES (/api/v1/newsletter):
+POST /subscribe — subscribe with email + name, send welcome email
+POST /unsubscribe — unsubscribe
+
+PROMO ROUTES (/api/v1/promo):
+POST /validate — validate promo code, return discount details
+
+TESTIMONIAL ROUTES (/api/v1/testimonials):
+GET / — approved testimonials
+POST / — submit testimonial
+PUT /:id/approve — approve (admin)
+
+UPLOAD ROUTE (/api/v1/upload):
+POST /image — upload image (admin, multer)
+
+ADMIN DASHBOARD (/api/v1/admin):
+GET /stats — total orders, revenue, bookings, subscribers (admin)
+
+═══════════════════════════════════════════════
+SECTION 5: PAYMENT — RAZORPAY INTEGRATION
+═══════════════════════════════════════════════
+
+FLOW:
+1. Frontend: user clicks "Pay Now" → POST /api/v1/orders → server creates Razorpay order → returns {razorpay_order_id, amount, currency, key_id}
+2. Frontend: opens Razorpay checkout modal with returned data
+3. User pays → Razorpay returns {razorpay_payment_id, razorpay_order_id, razorpay_signature}
+4. Frontend: POST /api/v1/orders/verify-payment with those three fields
+5. Server: verify HMAC signature using razorpay_order_id + razorpay_payment_id + secret
+6. If valid: update order status to 'confirmed', payment_status to 'paid', send order confirmation email
+7. Frontend: show success page with order number
+
+Razorpay options config:
+- key: RAZORPAY_KEY_ID (from env)
+- currency: INR
+- name: "Angaayam Foods"
+- description: "Order #{order_number}"
+- image: brand logo URL
+- prefill: {name, email, contact}
+- theme: {color: "#1a5c2e"} — forest green
+
+For paid events: same flow, create a Razorpay order for event price.
+
+═══════════════════════════════════════════════
+SECTION 6: EMAIL — NODEMAILER SETUP
+═══════════════════════════════════════════════
+
+Use Gmail SMTP via Nodemailer. Configure transporter with:
+- service: 'gmail'
+- auth: {user: GMAIL_USER, pass: GMAIL_APP_PASSWORD} from .env
+
+Create an emailService.ts with these functions, each sending a well-designed HTML email:
+
+1. sendWelcomeEmail(name, email) — welcome on registration
+2. sendOrderConfirmation(order) — full order details, items, total, tracking info note
+3. sendOrderStatusUpdate(order) — when admin updates order status
+4. sendBookingConfirmation(booking) — booking reference number, date, type
+5. sendBookingAdminNotification(booking) — notify admin@angaayamfoods.in of new booking
+6. sendContactAutoReply(name, email) — auto-reply on contact form
+7. sendContactAdminNotification(message) — notify admin of new message
+8. sendEventRegistrationConfirmation(registration, event) — event details + Zoom link if online
+9. sendPasswordReset(email, resetToken) — password reset link
+10. sendNewsletterWelcome(name, email) — newsletter welcome
+
+All email HTML templates must:
+- Use brand colors (forest green #1a5c2e, gold #c9943a, white)
+- Include Angaayam Foods logo text header
+- Be mobile-responsive inline-CSS HTML
+- Have a footer with unsubscribe note and brand address
+
+═══════════════════════════════════════════════
+SECTION 7: FRONTEND PAGES — DETAILED SPECS
+═══════════════════════════════════════════════
+
+DESIGN SYSTEM:
+Colors:
+- Primary Green: #1a5c2e (forest green)
+- Light Green: #2d8a4e
+- Pale Green: #e8f5ed (backgrounds)
+- Gold: #c9943a
+- Gold Light: #e5c06a
+- White: #ffffff
+- Off-White: #fafaf7
+- Dark: #1a1a1a
+- Muted: #6b7280
+
+Fonts:
+- Display/Headings: 'Playfair Display' (Google Fonts)
+- Body: 'DM Sans' (Google Fonts)
+Import both from Google Fonts in index.html
+
+Tailwind Config — extend with these custom colors:
+- primary: '#1a5c2e'
+- 'primary-light': '#2d8a4e'
+- 'primary-pale': '#e8f5ed'
+- gold: '#c9943a'
+- 'gold-light': '#e5c06a'
+
+Design Principles:
+- Green backgrounds with white text OR white backgrounds with green text
+- Gold for accents, prices, CTAs, highlights
+- Playfair Display for all headings (display: block)
+- DM Sans for body text, buttons, labels
+- Generous whitespace, elegant spacing
+- Subtle grain texture on hero sections (CSS background)
+- Rounded corners: 8px for cards, 4px for buttons, 100px for pills
+- Shadows: soft, green-tinted (box-shadow: 0 4px 24px rgba(26,92,46,0.12))
+
+─────────────────────────────
+PAGE 1: HOME (/)
+─────────────────────────────
+
+NAVBAR (sticky, transparent → solid on scroll):
+- Logo: leaf SVG icon + "Angaayam Foods" in Playfair Display (green)
+- Links: Home | Shop | Products | Booking | Events | Resources | Blog | Contact
+- Right: Cart icon with count badge + "Sign In" button + "Order Now" CTA button (gold)
+- Mobile: hamburger → full-screen slide-down menu with same links
+- On scroll past 80px: white background, green shadow
+
+HERO SECTION:
+- Full viewport height
+- Background: deep forest green (#1a5c2e) with subtle grain texture overlay
+- Left side (60%): 
+  - Small gold pill badge: "✦ Pure Millet Goodness"
+  - H1: "Nourish Your Family with Nature's Best" (Playfair Display, 72px, white)
+  - Subtext: "Premium millet-based snacks and organic foods crafted for your health and your children's growth." (DM Sans, 20px, rgba white 80%)
+  - Two CTA buttons: "Shop Now" (gold, filled) + "Explore Products" (white outline)
+  - Trust badges row: "100% Natural" | "No Preservatives" | "Kids Approved" | "Organic Certified" — each as small white pill with green icon
+- Right side (40%):
+  - Decorative composition: overlapping product card mockups with gold border radius
+  - Floating stat badges: "2500+ Happy Families" | "50+ Products" | "100% Organic"
+- Bottom: scroll indicator arrow animation
+
+WHY CHOOSE US SECTION:
+- Section label: "Why Angaayam Foods"
+- Heading: "Pure Ingredients. Powerful Nutrition."
+- 4 feature cards in grid (icon + heading + text):
+  1. 🌾 "Ancient Millet Wisdom" — Traditional recipes modernized
+  2. 🧒 "Kids Love It" — Nutritious snacks children actually enjoy
+  3. 🌿 "Certified Organic" — Zero pesticides, 100% natural
+  4. ✨ "Premium Quality" — Luxury packaging, artisanal process
+
+FEATURED PRODUCTS SECTION:
+- Heading: "Our Bestsellers"
+- Fetch from GET /api/v1/products/featured
+- Horizontal scrollable row of ProductCard components
+- Each ProductCard: image placeholder (green gradient), name, short desc, price, "Add to Cart" button, optional sale badge
+- "View All Products" button below
+
+CATEGORIES SECTION:
+- Heading: "Shop by Category"
+- 2-row grid of CategoryCard: image, name, product count
+- Hover: scale + green overlay
+- Link to /shop?category=slug
+
+TESTIMONIALS SECTION:
+- Heading: "Loved by Thousands"
+- Swiper.js carousel with autoplay
+- Each card: star rating (gold stars), review text, customer name, location, product name
+- Fetch from GET /api/v1/testimonials
+
+STATS BANNER:
+- Full-width green background
+- 4 stats: "2500+ Families Fed" | "50+ Organic Products" | "100% Natural Ingredients" | "4.9★ Average Rating"
+- Animated count-up on scroll into view
+
+BLOG PREVIEW SECTION:
+- Heading: "From Our Kitchen"
+- 3 latest blog post cards
+- Each: cover image, category pill, title, excerpt, read time, "Read More" link
+- Fetch from GET /api/v1/blog?limit=3
+
+NEWSLETTER SECTION:
+- Green gradient background
+- Heading: "Join Our Wellness Community"
+- Email + name input + subscribe button
+- POST /api/v1/newsletter/subscribe
+- Success toast message
+
+EVENTS PREVIEW SECTION:
+- Heading: "Upcoming Events"
+- 2-3 upcoming events as cards with date, title, type badge, location, "Register" button
+- Fetch from GET /api/v1/events
+
+FOOTER:
+- 4 columns: Brand (logo + description + social icons) | Quick Links | Contact Info | Newsletter mini-form
+- Bottom: © 2024 Angaayam Foods | Privacy Policy | Terms | Sitemap
+- Background: #1a1a1a (dark), text: white/muted
+
+─────────────────────────────
+PAGE 2: SHOP (/shop)
+─────────────────────────────
+
+- Page header: "Shop Healthy, Live Well"
+- LEFT SIDEBAR (desktop) or collapsible FILTER DRAWER (mobile):
+  - Category filter (checkboxes)
+  - Price range slider (₹0 – ₹2000)
+  - Tag filters: Kids-Friendly | Gluten-Free | Millet-Based | Sugar-Free | High-Protein
+  - Sort by: Featured | Price Low–High | Price High–Low | Newest | Rating
+  - "Clear Filters" button
+- MAIN CONTENT (right):
+  - Search bar at top
+  - Active filter pills (removable)
+  - Product count: "Showing 24 of 50 products"
+  - Product grid (3 cols desktop, 2 cols tablet, 1 col mobile)
+  - ProductCard component (see above)
+  - Pagination at bottom
+
+PRODUCT CARD COMPONENT:
+- Image area: green gradient placeholder, sale badge if applicable
+- Category pill (small, gold)
+- Product name (Playfair Display, 18px)
+- Short description (2 lines max, truncated)
+- Price: ₹XXX (if sale: strikethrough original + red sale price)
+- Weight options: small pill buttons (250g | 500g | 1kg)
+- "Add to Cart" button + Wishlist icon
+- Hover: lift shadow, show quick-view overlay
+
+─────────────────────────────
+PAGE 3: PRODUCTS (/products)  — Product Detail Page (/products/:slug)
+─────────────────────────────
+
+/products — Product categories landing page:
+- Grid of category cards with product counts
+- Featured collections (Kids Snacks | Millet Bites | Organic Staples)
+
+/products/:slug — Single product:
+- Breadcrumb: Home > Products > Category > Product Name
+- LEFT: Product image gallery (main image + thumbnails, Swiper for mobile)
+- RIGHT: 
+  - Category pill
+  - Product name (H1, Playfair Display, 36px)
+  - Rating stars + review count
+  - Price (large, gold) with sale price if applicable
+  - Short description
+  - Weight options selector (pill buttons, selected = green filled)
+  - Quantity stepper (−/+)
+  - "Add to Cart" button (full width, gold) + "Buy Now" button
+  - Trust icons: 🔒 Secure Payment | 🚚 Free Shipping ₹500+ | ↩ Easy Returns
+  - Accordion tabs: Description | Ingredients | Nutritional Info | How to Use
+- BELOW: Related Products row
+- BELOW: Customer Reviews section with rating breakdown + review list
+
+─────────────────────────────
+PAGE 4: BOOKING (/booking)
+─────────────────────────────
+
+- Hero: "Book a Consultation or Bulk Order"
+- Subtext: "Whether you're a health-conscious individual, a school, or a corporate client — we're here to serve you."
+- 4 Booking Type Cards (large, selectable):
+  1. 🧑‍⚕️ Health Consultation — Talk to our nutrition expert
+  2. 📦 Bulk Order — Order for events, offices, schools
+  3. 🏢 Corporate Wellness — Customized wellness packages
+  4. 🎁 Gift Hamper — Custom gift boxes for any occasion
+- On selecting a type, show the booking form below:
+  - Name, Email, Phone (required)
+  - Company Name (for Corporate/Bulk only)
+  - Preferred Date (date picker, min: tomorrow)
+  - Preferred Time (select: Morning 9–12 | Afternoon 12–5 | Evening 5–8)
+  - Message/Requirements (textarea)
+  - Submit → POST /api/v1/bookings → show success with booking reference number
+- FAQ section below the form: 5–6 common questions about bulk orders, delivery, customization
+
+─────────────────────────────
+PAGE 5: EVENTS (/events)
+─────────────────────────────
+
+- Hero: "Events & Workshops"
+- Filter tabs: All | Webinars | Workshops | Pop-ups | Tasting
+- Events grid (2 cols desktop, 1 col mobile):
+  - Each EventCard: cover image, event type badge, title, date/time, location (or "Online"), price (or "Free"), attendee count, "Register Now" button
+- On clicking Register:
+  - If free: show registration modal (name, email, phone, attendees count) → POST /api/v1/events/:id/register → success with confirmation
+  - If paid: same modal + Razorpay payment flow
+- Past Events section (collapsible)
+- "Suggest an Event" CTA → link to /contact
+
+─────────────────────────────
+PAGE 6: RESOURCES (/resources)
+─────────────────────────────
+
+- Hero: "Free Wellness Resources"
+- Subtext: "Download guides, recipes, and nutrition charts — completely free."
+- Filter tabs: All | Recipes | Nutrition Guides | Millet Facts | Kids Health | PDFs
+- Resource cards grid (3 cols):
+  - Each: thumbnail, type badge, title, description, download count, "Download Free" button
+  - On click: POST /api/v1/resources/:id/download → return URL → trigger browser download
+- Featured resource banner: highlight a premium guide with full-width card
+- Video resources section: embed YouTube-style video thumbnails (link to external)
+
+─────────────────────────────
+PAGE 7: BLOG (/blog)
+─────────────────────────────
+
+/blog — Blog listing:
+- Hero: "The Wellness Journal"
+- Featured post: large card (full width, cover image, category, title, excerpt, author, date, read time)
+- Category filter pills: All | Nutrition | Recipes | Wellness | Kids Health | Millets
+- 3-column blog grid with BlogCard components
+- Pagination (10 posts per page)
+- Sidebar (desktop): Search | Popular Posts | Categories | Newsletter CTA
+
+/blog/:slug — Single blog post:
+- Cover image (full width)
+- Category + Read time badges
+- H1 title (Playfair Display, 48px)
+- Author + date
+- Body content (render HTML/markdown safely)
+- Share buttons (WhatsApp, Twitter/X, Copy Link)
+- Related posts section (3 cards)
+- Comment/review CTA: "Share your thoughts" → link to contact
+
+─────────────────────────────
+PAGE 8: CONTACT (/contact)
+─────────────────────────────
+
+- Two-column layout:
+  LEFT: 
+  - "Get in Touch"
+  - Brief text about the brand's commitment
+  - Info blocks: 📍 Address | 📞 Phone | ✉️ Email | 🕐 Business Hours
+  - Social media links: Instagram | Facebook | YouTube | WhatsApp
+  - Google Maps embed placeholder (show static green box with pin icon and address text if no API key)
+  RIGHT:
+  - Contact form: Name, Email, Phone, Subject (select: Order Issue | Bulk Inquiry | General | Partnership | Feedback), Message
+  - Submit → POST /api/v1/contact → auto-reply email + admin notification
+  - Success message with expected response time
+
+ADDITIONAL PAGES:
+/cart — Cart page with items, quantity controls, promo code field, order summary, checkout button
+/checkout — Checkout form (shipping address + order summary + Razorpay payment button)
+/order-success — Success page with order number, summary, "Continue Shopping"
+/account — User profile, order history, saved addresses (protected route)
+/auth/login — Login form
+/auth/register — Register form
+
+═══════════════════════════════════════════════
+SECTION 8: CART & CHECKOUT FLOW
+═══════════════════════════════════════════════
+
+CART STATE (Zustand or React Context):
+- Support both localStorage (guest) and server-synced (logged in)
+- Fields per item: product_id, name, image, price, quantity, weight_option, sku
+- Actions: addItem, removeItem, updateQuantity, clearCart, syncWithServer
+
+CHECKOUT FLOW:
+1. /cart page: review items, enter promo code (POST /api/v1/promo/validate), see discount applied
+2. "Proceed to Checkout" → /checkout
+3. Checkout form: shipping address (name, line1, line2, city, state, pincode, phone)
+4. Order summary panel (right side)
+5. "Place Order" → POST /api/v1/orders → get razorpay_order_id
+6. Razorpay modal opens
+7. On success → POST /api/v1/orders/verify-payment
+8. Redirect to /order-success?order=AF-2024-0001
+
+═══════════════════════════════════════════════
+SECTION 9: AUTHENTICATION
+═══════════════════════════════════════════════
+
+- JWT stored in httpOnly cookie (not localStorage)
+- Refresh token pattern optional but recommended
+- Protected routes: /account, /checkout (allow guest checkout)
+- Auth context: user, isLoggedIn, login(), logout(), register()
+- ProtectedRoute component wrapping private pages
+- After login: redirect to previous page or /account
+
+═══════════════════════════════════════════════
+SECTION 10: ADMIN PANEL (/admin)
+═══════════════════════════════════════════════
+
+Simple admin panel at /admin (protected, role: admin):
+
+Pages:
+- /admin — Dashboard: stats cards (orders, revenue, bookings, subscribers), recent orders table, recent bookings table
+- /admin/products — Product list with add/edit/delete (CRUD modal or page)
+- /admin/orders — Orders table with status filter, update status dropdown, view order detail
+- /admin/bookings — Bookings table with status update
+- /admin/events — Events CRUD
+- /admin/blog — Blog posts CRUD (use a simple textarea for content)
+- /admin/resources — Resources CRUD (with file upload)
+- /admin/messages — Contact messages list, mark as read
+- /admin/testimonials — Approve/reject testimonials
+
+Admin sidebar navigation with all above links.
+Design: same green/white/gold theme, sidebar is dark green.
+
+═══════════════════════════════════════════════
+SECTION 11: SEED DATA
+═══════════════════════════════════════════════
+
+Create a seed script (server/src/db/seed.ts) that populates:
+
+CATEGORIES (8):
+1. Millet Snacks — Crispy, nutritious millet-based snacks
+2. Kids Snacks — Healthy, tasty snacks for growing children
+3. Organic Staples — Pure organic everyday food essentials
+4. Breakfast Foods — Healthy morning meal options
+5. Trail Mixes — Energy-boosting natural mixes
+6. Millet Flours — Stone-ground ancient grain flours
+7. Healthy Sweets — Guilt-free traditional sweet treats
+8. Gift Hampers — Curated wellness gift collections
+
+PRODUCTS (12):
+1. Foxtail Millet Puffs — Kids Snacks — ₹199 — featured — tags: kids-friendly, gluten-free
+2. Ragi Almond Cookies — Kids Snacks — ₹249 — sale: ₹199 — featured — kids-friendly
+3. Bajra Energy Bars — Trail Mixes — ₹299 — featured — high-protein, gluten-free
+4. Jowar Roasted Crunchies — Millet Snacks — ₹179 — gluten-free
+5. Multi-Millet Porridge Mix — Breakfast Foods — ₹349 — featured — organic
+6. Pearl Millet Ladoo — Healthy Sweets — ₹399 — traditional
+7. Little Millets Dosa Mix — Breakfast Foods — ₹299 — organic, gluten-free
+8. Amaranth Pops — Millet Snacks — ₹149 — kids-friendly
+9. Finger Millet Flour — Millet Flours — ₹249 — organic, gluten-free
+10. Quinoa Trail Mix — Trail Mixes — ₹449 — featured — high-protein
+11. Organic Jaggery Bites — Healthy Sweets — ₹229 — no-preservatives
+12. Wellness Gift Hamper — Gift Hampers — ₹999 — featured
+
+BLOG POSTS (4):
+1. "Why Millets Are the Superfood Your Family Needs" — Nutrition
+2. "5 Healthy Millet Snacks Kids Will Actually Love" — Kids Health
+3. "Beginner's Guide to Going Organic" — Wellness
+4. "The Ancient Wisdom of Millets: From Farm to Fork" — Millets
+
+EVENTS (3):
+1. "Live Millet Cooking Workshop" — Workshop — next month — ₹299 — Online
+2. "Healthy Kids Snacks Webinar" — Webinar — next week — Free — Online
+3. "Organic Foods Tasting Pop-up, Coimbatore" — Tasting — this month — Free — Offline
+
+RESOURCES (4):
+1. "Millet Nutrition Chart" — PDF — Nutrition Guides
+2. "10 Quick Millet Recipes for Kids" — Recipe — Recipes
+3. "Guide to Reading Food Labels" — PDF — Wellness
+4. "Millet vs Wheat: Complete Comparison" — Infographic
+
+TESTIMONIALS (6 — pre-approved):
+Various customer names and locations across Tamil Nadu, 4–5 star ratings, referencing specific products.
+
+PROMO CODE:
+Code: HEALTH10 — 10% off — min order ₹500 — valid for 100 uses
+
+ADMIN USER:
+Email: admin@angaayamfoods.in — Password: Admin@123 — role: admin
+
+═══════════════════════════════════════════════
+SECTION 12: ENVIRONMENT VARIABLES (.env)
+═══════════════════════════════════════════════
+
+Create .env at project root with these keys (with placeholder values):
+
+# Server
+PORT=5000
+NODE_ENV=development
+CLIENT_URL=http://localhost:5173
+
+# Database
+DATABASE_URL=postgresql://username:password@localhost:5432/angaayam_foods
+
+# JWT
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRES_IN=7d
+
+# Razorpay
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_secret
+
+# Email (Gmail SMTP)
+GMAIL_USER=your-gmail@gmail.com
+GMAIL_APP_PASSWORD=your-gmail-app-password
+ADMIN_EMAIL=admin@angaayamfoods.in
+
+# File Upload
+UPLOAD_DIR=uploads
+MAX_FILE_SIZE=5242880
+
+# Frontend (Vite — prefix with VITE_)
+VITE_API_URL=http://localhost:5000/api/v1
+VITE_RAZORPAY_KEY_ID=rzp_test_your_key_id
+VITE_APP_NAME=Angaayam Foods
+
+═══════════════════════════════════════════════
+SECTION 13: ROOT PACKAGE.JSON SCRIPTS
+═══════════════════════════════════════════════
+
+{
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm run build && cd ../server && npm run build",
+    "start": "cd server && npm start",
+    "db:migrate": "cd server && npm run db:migrate",
+    "db:seed": "cd server && npm run db:seed",
+    "setup": "npm install && cd client && npm install && cd ../server && npm install"
+  }
+}
+
+═══════════════════════════════════════════════
+SECTION 14: REUSABLE COMPONENTS TO BUILD
+═══════════════════════════════════════════════
+
+Build all of these as reusable TypeScript React components:
+
+LAYOUT:
+- Navbar (sticky, transparent→solid, cart badge, auth state, mobile hamburger)
+- Footer (4-column, social, newsletter)
+- PageLayout (wraps Navbar + children + Footer)
+- AdminLayout (sidebar + topbar + content area)
+
+UI PRIMITIVES:
+- Button (variants: primary/secondary/ghost/gold/outline; sizes: sm/md/lg; loading state)
+- Input (with label, error, helper text)
+- Select (custom styled)
+- Textarea
+- Badge / Pill (color variants)
+- Card (base card with optional hover effects)
+- Modal (portal, backdrop, close on ESC/click outside)
+- Toast (using react-hot-toast, custom styled)
+- Spinner / Loader
+- StarRating (display + interactive)
+- QuantityStepper
+- Breadcrumb
+- Pagination
+- Accordion (for FAQ, product details)
+- ImagePlaceholder (green gradient with leaf icon for missing product images)
+- EmptyState (illustration + message + CTA)
+- ErrorBoundary
+
+PRODUCT COMPONENTS:
+- ProductCard (grid view)
+- ProductGrid
+- ProductFilters (sidebar)
+- CartItem
+- CartSummary
+- CheckoutForm
+- OrderSummary
+
+SECTION COMPONENTS:
+- SectionHeader (tag + heading + subtext, centered or left)
+- FeatureCard
+- TestimonialCard
+- BlogCard
+- EventCard
+- ResourceCard
+- StatsBanner
+- NewsletterForm
+- HeroSection
+
+═══════════════════════════════════════════════
+SECTION 15: ADDITIONAL REQUIREMENTS
+═══════════════════════════════════════════════
+
+SEO:
+- React Helmet or Vite plugin for per-page <title> and <meta description>
+- Structured data (JSON-LD) for products on product pages
+- Sitemap.xml generation note in README
+
+PERFORMANCE:
+- Lazy load all page components with React.lazy + Suspense
+- Image lazy loading (loading="lazy")
+- React Query caching with staleTime: 5 minutes for product/blog data
+- Debounce search inputs (300ms)
+
+ACCESSIBILITY:
+- ARIA labels on all interactive elements
+- Keyboard navigable menus
+- Focus visible styles
+- Color contrast compliant (green on white meets WCAG AA)
+
+ERROR HANDLING:
+- Global error boundary in React
+- API error interceptor in axios (401 → redirect to login, 500 → show toast)
+- All forms show field-level validation errors (Zod + React Hook Form)
+- 404 page with brand styling and "Go Home" CTA
+
+LOADING STATES:
+- Skeleton loaders for product grids, blog lists
+- Spinner on form submissions
+- Optimistic UI on cart operations
+
+MOBILE RESPONSIVENESS:
+- All pages fully responsive: mobile (375px+), tablet (768px+), desktop (1024px+)
+- Mobile: bottom navigation bar with Cart, Home, Shop, Account icons
+- Touch-friendly: tap targets min 44px
+- Horizontal scroll for product carousels on mobile
+
+═══════════════════════════════════════════════
+SECTION 16: README.md
+═══════════════════════════════════════════════
+
+Generate a complete README.md with:
+- Project overview and features list
+- Tech stack
+- Prerequisites (Node 18+, PostgreSQL 14+)
+- Installation steps (clone → npm run setup → configure .env → npm run db:migrate → npm run db:seed → npm run dev)
+- Environment variables table with descriptions
+- API documentation summary
+- Deployment guide (build command, start command)
+- Admin panel access credentials
+- Razorpay test card numbers for testing
+
+═══════════════════════════════════════════════
+SECTION 17: BUILD INSTRUCTIONS FOR REPLIT
+═══════════════════════════════════════════════
+
+Since this runs on Replit:
+1. Use a single PostgreSQL database (Replit provides one or use Neon.tech free tier)
+2. Set all env variables in Replit Secrets
+3. The Express server serves the built Vite frontend in production (serve client/dist from server)
+4. In development, use the concurrently setup
+5. Replit .replit file:
+   run = "npm run dev"
+   language = "nodejs"
+6. Port: Replit auto-assigns — use process.env.PORT || 5000 on server
+7. VITE_API_URL in production should be the same domain (relative URL: /api/v1)
+
+═══════════════════════════════════════════════
+BUILD THIS COMPLETE PROJECT NOW.
+Start with:
+1. Project structure + package.json files
+2. Database schema (Drizzle)
+3. Express server with all routes
+4. React frontend with all pages and components
+5. Seed data
+6. README
+
+Make every component production-quality. Do not leave any TODOs or placeholder logic — implement everything fully. Use TypeScript strictly throughout. All API calls must have proper error handling. All forms must have validation. The UI must look premium and match the green/white/gold theme throughout.
+═══════════════════════════════════════════════

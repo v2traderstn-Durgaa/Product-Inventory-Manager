@@ -3,20 +3,43 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Angaayam Foods API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: products
+    description: Product operations
+  - name: categories
+    description: Category operations
+  - name: cart
+    description: Cart operations
+  - name: orders
+    description: Order operations
+  - name: bookings
+    description: Booking operations
+  - name: events
+    description: Event operations
+  - name: blog
+    description: Blog operations
+  - name: contact
+    description: Contact operations
+  - name: newsletter
+    description: Newsletter operations
+  - name: testimonials
+    description: Testimonial operations
+  - name: promo
+    description: Promo code operations
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +47,463 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /v1/products:
+    get:
+      operationId: getProducts
+      tags: [products]
+      summary: List all active products
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Products list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                required: [products]
+
+  /v1/products/featured:
+    get:
+      operationId: getFeaturedProducts
+      tags: [products]
+      summary: Get featured products
+      responses:
+        "200":
+          description: Featured products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                required: [products]
+
+  /v1/products/{slug}:
+    get:
+      operationId: getProductBySlug
+      tags: [products]
+      summary: Get product by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+
+  /v1/categories:
+    get:
+      operationId: getCategories
+      tags: [categories]
+      summary: List all categories
+      responses:
+        "200":
+          description: Categories list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
+                required: [categories]
+
+  /v1/orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderBody"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderCreatedResponse"
+    get:
+      operationId: getAllOrders
+      tags: [orders]
+      summary: Get all orders (admin)
+      responses:
+        "200":
+          description: All orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+                required: [orders]
+
+  /v1/orders/verify-payment:
+    post:
+      operationId: verifyPayment
+      tags: [orders]
+      summary: Verify Razorpay payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyPaymentBody"
+      responses:
+        "200":
+          description: Payment verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /v1/orders/my-orders:
+    get:
+      operationId: getMyOrders
+      tags: [orders]
+      summary: Get current user orders
+      responses:
+        "200":
+          description: User orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+                required: [orders]
+
+  /v1/orders/{orderNumber}:
+    get:
+      operationId: getOrderByNumber
+      tags: [orders]
+      summary: Get order by number
+      parameters:
+        - name: orderNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /v1/bookings:
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingBody"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    get:
+      operationId: getAllBookings
+      tags: [bookings]
+      summary: Get all bookings (admin)
+      responses:
+        "200":
+          description: All bookings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Booking"
+                required: [bookings]
+
+  /v1/events:
+    get:
+      operationId: getEvents
+      tags: [events]
+      summary: List upcoming events
+      responses:
+        "200":
+          description: Events list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Event"
+                required: [events]
+
+  /v1/events/{slug}:
+    get:
+      operationId: getEventBySlug
+      tags: [events]
+      summary: Get event by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Event detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+  /v1/events/{id}/register:
+    post:
+      operationId: registerForEvent
+      tags: [events]
+      summary: Register for event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventRegistrationBody"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventRegistration"
+
+  /v1/blog:
+    get:
+      operationId: getBlogPosts
+      tags: [blog]
+      summary: List published blog posts
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Blog posts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BlogPost"
+                  total:
+                    type: integer
+                required: [posts, total]
+
+  /v1/blog/{slug}:
+    get:
+      operationId: getBlogPostBySlug
+      tags: [blog]
+      summary: Get blog post by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Blog post detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+
+  /v1/contact:
+    post:
+      operationId: submitContact
+      tags: [contact]
+      summary: Submit contact message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageBody"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                required: [success, message]
+
+  /v1/newsletter/subscribe:
+    post:
+      operationId: subscribeNewsletter
+      tags: [newsletter]
+      summary: Subscribe to newsletter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewsletterSubscribeBody"
+      responses:
+        "201":
+          description: Subscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                required: [success, message]
+
+  /v1/testimonials:
+    get:
+      operationId: getTestimonials
+      tags: [testimonials]
+      summary: Get approved testimonials
+      responses:
+        "200":
+          description: Testimonials list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  testimonials:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Testimonial"
+                required: [testimonials]
+    post:
+      operationId: submitTestimonial
+      tags: [testimonials]
+      summary: Submit testimonial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitTestimonialBody"
+      responses:
+        "201":
+          description: Testimonial submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Testimonial"
+
+  /v1/promo/validate:
+    post:
+      operationId: validatePromo
+      tags: [promo]
+      summary: Validate promo code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidatePromoBody"
+      responses:
+        "200":
+          description: Promo valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromoValidationResponse"
+        "400":
+          description: Invalid promo
+
+  /v1/admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin dashboard stats
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +511,484 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        shortDescription:
+          type: string
+        price:
+          type: number
+        salePrice:
+          type: number
+          nullable: true
+        categoryId:
+          type: string
+        categoryName:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        ingredients:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        weightOptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeightOption"
+        isFeatured:
+          type: boolean
+        isActive:
+          type: boolean
+        stockQuantity:
+          type: integer
+        sku:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, slug, price, categoryId, isFeatured, isActive, stockQuantity, sku]
+
+    WeightOption:
+      type: object
+      properties:
+        weight:
+          type: string
+        price:
+          type: number
+      required: [weight, price]
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+        productCount:
+          type: integer
+      required: [id, name, slug, isActive]
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        orderNumber:
+          type: string
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        subtotal:
+          type: number
+        discount:
+          type: number
+        shippingCost:
+          type: number
+        total:
+          type: number
+        status:
+          type: string
+        paymentStatus:
+          type: string
+        paymentMethod:
+          type: string
+        razorpayOrderId:
+          type: string
+          nullable: true
+        razorpayPaymentId:
+          type: string
+          nullable: true
+        shippingAddress:
+          $ref: "#/components/schemas/ShippingAddress"
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, orderNumber, customerName, customerEmail, items, subtotal, total, status, paymentStatus]
+
+    OrderItem:
+      type: object
+      properties:
+        productId:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: integer
+        weight:
+          type: string
+      required: [productId, name, price, quantity]
+
+    ShippingAddress:
+      type: object
+      properties:
+        name:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        pincode:
+          type: string
+        phone:
+          type: string
+      required: [name, line1, city, state, pincode, phone]
+
+    CreateOrderBody:
+      type: object
+      properties:
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        subtotal:
+          type: number
+        discount:
+          type: number
+        shippingCost:
+          type: number
+        total:
+          type: number
+        paymentMethod:
+          type: string
+        shippingAddress:
+          $ref: "#/components/schemas/ShippingAddress"
+        promoCode:
+          type: string
+        notes:
+          type: string
+      required: [customerName, customerEmail, customerPhone, items, subtotal, total, paymentMethod, shippingAddress]
+
+    OrderCreatedResponse:
+      type: object
+      properties:
+        order:
+          $ref: "#/components/schemas/Order"
+        razorpayOrderId:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        keyId:
+          type: string
+      required: [order]
+
+    VerifyPaymentBody:
+      type: object
+      properties:
+        razorpayOrderId:
+          type: string
+        razorpayPaymentId:
+          type: string
+        razorpaySignature:
+          type: string
+        orderId:
+          type: string
+      required: [razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId]
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+        bookingNumber:
+          type: string
+        type:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        companyName:
+          type: string
+          nullable: true
+        preferredDate:
+          type: string
+        preferredTime:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+      required: [id, bookingNumber, type, name, email, phone, preferredDate, preferredTime, status]
+
+    CreateBookingBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [consultation, bulk_order, corporate, gift_hamper]
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        companyName:
+          type: string
+        preferredDate:
+          type: string
+        preferredTime:
+          type: string
+        message:
+          type: string
+      required: [type, name, email, phone, preferredDate, preferredTime, message]
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        eventType:
+          type: string
+        eventDate:
+          type: string
+        endDate:
+          type: string
+          nullable: true
+        location:
+          type: string
+        isOnline:
+          type: boolean
+        meetingLink:
+          type: string
+          nullable: true
+        maxAttendees:
+          type: integer
+          nullable: true
+        price:
+          type: number
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+        registrationCount:
+          type: integer
+      required: [id, title, slug, description, eventType, eventDate, location, isOnline, price, isActive]
+
+    EventRegistrationBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        attendees:
+          type: integer
+      required: [name, email, phone]
+
+    EventRegistration:
+      type: object
+      properties:
+        id:
+          type: string
+        eventId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        attendees:
+          type: integer
+        paymentStatus:
+          type: string
+        createdAt:
+          type: string
+      required: [id, eventId, name, email, phone, paymentStatus]
+
+    BlogPost:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        slug:
+          type: string
+        excerpt:
+          type: string
+        content:
+          type: string
+        coverImage:
+          type: string
+        authorName:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        isPublished:
+          type: boolean
+        publishedAt:
+          type: string
+          nullable: true
+        readTimeMinutes:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, title, slug, excerpt, authorName, category, isPublished, readTimeMinutes]
+
+    ContactMessageBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        subject:
+          type: string
+        message:
+          type: string
+      required: [name, email, subject, message]
+
+    NewsletterSubscribeBody:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+      required: [email]
+
+    Testimonial:
+      type: object
+      properties:
+        id:
+          type: string
+        customerName:
+          type: string
+        location:
+          type: string
+        rating:
+          type: integer
+        review:
+          type: string
+        productId:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+        isApproved:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, customerName, rating, review, isApproved]
+
+    SubmitTestimonialBody:
+      type: object
+      properties:
+        customerName:
+          type: string
+        location:
+          type: string
+        rating:
+          type: integer
+        review:
+          type: string
+        productId:
+          type: string
+      required: [customerName, rating, review]
+
+    ValidatePromoBody:
+      type: object
+      properties:
+        code:
+          type: string
+        orderValue:
+          type: number
+      required: [code, orderValue]
+
+    PromoValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        discountType:
+          type: string
+        discountValue:
+          type: number
+        discountAmount:
+          type: number
+        message:
+          type: string
+      required: [valid]
+
+    AdminStats:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+        totalRevenue:
+          type: number
+        totalBookings:
+          type: integer
+        totalSubscribers:
+          type: integer
+        pendingOrders:
+          type: integer
+        recentOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+      required: [totalOrders, totalRevenue, totalBookings, totalSubscribers, pendingOrders]
