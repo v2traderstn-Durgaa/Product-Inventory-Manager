@@ -5,6 +5,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useState } from "react";
 import { useValidatePromo } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { getProductImage } from "@/lib/product-images";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotal } = useCart();
@@ -70,8 +71,14 @@ export default function CartPage() {
               <motion.div key={`${item.productId}-${item.weight}`} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
                 className="bg-card border border-border rounded-2xl p-4 flex gap-4 items-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center shrink-0">
-                  <p className="text-white font-serif font-bold text-xs text-center px-1">{item.name}</p>
+                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-secondary/40">
+                  {getProductImage(item.slug) ? (
+                    <img src={getProductImage(item.slug)} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                      <p className="text-white font-serif font-bold text-xs text-center px-1">{item.name}</p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground">{item.name}</h3>

@@ -5,6 +5,7 @@ import { ShoppingBag, ArrowLeft, Package, CheckCircle } from "lucide-react";
 import { useGetProductBySlug } from "@workspace/api-client-react";
 import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
+import { getProductImage } from "@/lib/product-images";
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -60,18 +61,28 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Image */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="aspect-square bg-gradient-to-br from-primary to-primary/60 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-accent" style={{ transform: "translate(30%, -30%)" }} />
-                <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-white" style={{ transform: "translate(-30%, 30%)" }} />
-              </div>
-              <div className="text-center z-10 p-8">
-                <p className="text-white/40 text-sm uppercase tracking-widest mb-4">Angaayam Foods</p>
-                <p className="text-white font-serif font-bold text-4xl leading-tight mb-4">{product.name}</p>
-                {effectiveWeight && (
-                  <p className="text-white/60 text-lg">{effectiveWeight.weight}</p>
-                )}
-              </div>
+            <div className="aspect-square rounded-3xl overflow-hidden bg-secondary/30">
+              {getProductImage(product.slug) ? (
+                <img
+                  src={getProductImage(product.slug)}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary to-primary/60 flex flex-col items-center justify-center relative">
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-accent" style={{ transform: "translate(30%, -30%)" }} />
+                    <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-white" style={{ transform: "translate(-30%, 30%)" }} />
+                  </div>
+                  <div className="text-center z-10 p-8">
+                    <p className="text-white/40 text-sm uppercase tracking-widest mb-4">Angaayam Foods</p>
+                    <p className="text-white font-serif font-bold text-4xl leading-tight mb-4">{product.name}</p>
+                    {effectiveWeight && (
+                      <p className="text-white/60 text-lg">{effectiveWeight.weight}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
 

@@ -3,6 +3,7 @@ import { ShoppingBag, Star } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { getProductImage } from "@/lib/product-images";
 
 interface ProductCardProps {
   product: {
@@ -22,6 +23,18 @@ interface ProductCardProps {
 }
 
 function ProductImage({ product }: { product: ProductCardProps["product"] }) {
+  const imgSrc = getProductImage(product.slug);
+
+  if (imgSrc) {
+    return (
+      <img
+        src={imgSrc}
+        alt={product.name}
+        className="w-full h-full object-cover"
+      />
+    );
+  }
+
   const categoryColors: Record<string, string> = {
     "Millet Snacks": "from-green-800 to-green-600",
     "Organic Foods": "from-amber-800 to-amber-600",
@@ -29,7 +42,7 @@ function ProductImage({ product }: { product: ProductCardProps["product"] }) {
   const gradient = categoryColors[product.categoryName ?? ""] ?? "from-green-900 to-green-700";
 
   return (
-    <div className={`w-full aspect-square bg-gradient-to-br ${gradient} flex flex-col items-center justify-center p-4 relative overflow-hidden`}>
+    <div className={`w-full h-full bg-gradient-to-br ${gradient} flex flex-col items-center justify-center p-4 relative overflow-hidden`}>
       <div className="absolute inset-0 opacity-10">
         <div className="w-32 h-32 rounded-full bg-white absolute -top-8 -right-8" />
         <div className="w-20 h-20 rounded-full bg-white absolute -bottom-4 -left-4" />
@@ -73,7 +86,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     >
       <Link href={`/products/${product.slug}`}>
         <div className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden aspect-square">
             <ProductImage product={product} />
             {hasDiscount && (
               <span className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 rounded-full">
