@@ -21,6 +21,7 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "millet-rusk": ruskImg,
   "traditional-ghee": gheeImg,
   "little-bee-honey": lbHoneyImg,
+  "pure-wild-honey-little-bee": lbHoneyImg,
   "mountain-bee-honey": mountainHoneyImg,
   "mountain-honey": mountainHoneyImg,
 };
